@@ -1,0 +1,28 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+{% load static %}
+<!--
+<script src="{% static 'myResidenceService/newservicerequest.js' %}">
+
+</script>
+-->
+<link rel="stylesheet" href="{% static 'myResidenceService/newservicerequest.css' %}">
+{% load crispy_forms_tags %}
+<div class="row">
+
+<div class="col-md-2"></div>
+
+<div class="col-md-8">
+    <h3>Update Service </h3>
+</hr>
+    <form action="" method="POST">
+    {% csrf_token %}
+    {{form|crispy}}
+    <input type="submit">
+    
+</form>
+</div>
+</div>
+{% endblock %}

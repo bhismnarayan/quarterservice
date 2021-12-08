@@ -1,0 +1,58 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+{% load static %}
+<link rel="stylesheet" href="{% static 'myResidenceService/profile.css' %}">
+<div class="row">
+  
+<div class="col-sm-9">
+  {% if latest_complaint_list %}
+<table class="table">
+  <thead>
+    <tr>      
+      <th scope="col">Complaint No</th>
+      <th scope="col">Repair Type</th>
+      <th scope="col">Compalint Details</th>
+      <th scope="col">Status</th>
+      <th scope="col"></th>
+    </tr>
+  </thead>
+  <tbody>
+    
+    {% for complaint in latest_complaint_list %}
+    <tr>
+      <td><a href="/myResidenceService/{{ complaint.Complaint_no}}">{{ complaint.Complaint_no }}</a></td>
+      
+     
+      <td>{{ complaint.Repair_type }}</td>
+      <td>{{ complaint.Complaint_detail }}</td>
+      <td>{{ complaint.Service_status }}</td>
+      <td> <button type="button" class="btn btn-primary"><a href="{% url 'myResidenceService:update' complaint.Complaint_no %}">Update</a></button></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+    
+{% else %}
+    <p>No Request raised by you.</p>
+{% endif %}
+{% if memeber %}
+            <a class="nav-item nav-link" href="/myResidenceService/report">Report</a>
+            {% endif %}
+</div>
+<div class="col-sm-3">
+<div class="card">  
+  
+  <h3>{{userdetail.user.Name}}</h3>
+  <p class="title">{{userdetail.user.Desig}}</p>
+  <p>{{userdetail.qtr.Qtr_no}}</p>
+  <p>{{userdetail.colony.Col_name}}</p>
+  {% if memeber %}
+  <p><button>Station - {{userdetail.colony.Station}}</button></p>
+  {% endif %}
+</div>
+</div>  
+</div>
+      
+{% endblock %}

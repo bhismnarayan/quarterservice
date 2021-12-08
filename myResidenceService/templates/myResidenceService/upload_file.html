@@ -1,0 +1,13 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+
+<form enctype="multipart/form-data" action="" method="POST">
+    {% csrf_token %}
+    SSE Data :<input type="file"  name="sse_file"/>
+    Occupant Data :<input type="file"  name="occupant_file"/>
+
+    <input type="submit" value="Submit" />
+</form>
+
+{% endblock %}
