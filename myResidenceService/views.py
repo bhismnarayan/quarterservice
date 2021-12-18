@@ -1,6 +1,7 @@
 from django.http import HttpResponse,HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render,redirect
-from .models import Colony, Complaint_details, Employee, Qtr_occupancy, Quarter,SSE_Colony
+from .models import Colony, Complaint_details, Employee, Qtr_occupancy, Quarter,SSE_Colony,SimpleTable
+from django.db.models import Q
 from .forms import ComplaintForm,UploadFileForm,NewUserForm,UpdateComplaintForm
 from django.contrib.auth.decorators import login_required
 import pandas as pd
@@ -30,21 +31,20 @@ def index(request):
     except Exception as e:
         print(e)    
     latest_complaint_list={}
-    member={}
+    member=False
+    reopen=False
     if is_member(request.user):
-        member["isValid"]=True        
+        member=True            
         colonyList=SSE_Colony.objects.filter(Empno=userdetail['user']['Empno']).values('Colony_code')        
         colonycode_id_list = Colony.objects.filter(Colony_code__in=colonyList).values('id')        
         quarter = Quarter.objects.filter(Colony_code__in=colonycode_id_list).values('id')
-        quarteroccupancy = Qtr_occupancy.objects.filter(Qtr_ID__in=quarter).values('id')
-        print(quarteroccupancy)
-        latest_complaint_list = Complaint_details.objects.filter(Qtr_id__in=quarteroccupancy)
-        print(latest_complaint_list)
+        quarteroccupancy = Qtr_occupancy.objects.filter(Qtr_ID__in=quarter).values('id')        
+        latest_complaint_list = Complaint_details.objects.filter(Qtr_id__in=quarteroccupancy and ~Q(Service_status = "CLOSED"))        
     else:    
-        latest_complaint_list = Complaint_details.objects.filter(Empno=userdetail['user']['id'])
-    
+        reopen=True
+        latest_complaint_list = Complaint_details.objects.filter(Empno=userdetail['user']['id'] and ~Q(Service_status = "CLOSED") )        
     context = {'latest_complaint_list': latest_complaint_list,
-              'userdetail':userdetail,'member':member}
+              'userdetail':userdetail,'member':member,'reopen':reopen}            
     return render(request, 'myResidenceService/index.html', context)
 
 def register_request(request):
@@ -52,16 +52,13 @@ def register_request(request):
     if request.method == "POST":
         form = NewUserForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            print(user)
+            user = form.save()            
             if user!=None:
                 login(request, user)
                 messages.success(request, "Registration successful." )
                 return redirect("/")
-            else:
-                
+            else:                
                 messages.error(request, "Unsuccessful registration. Invalid information.")
-
         messages.error(request, "Unsuccessful registration. Invalid information.")
         
     return render (request=request, template_name="myResidenceService/register.html", context={"register_form":form})
@@ -112,21 +109,38 @@ def newRequest(request):
             form.save()           
             return HttpResponseRedirect('/')
         else:
-            print("Invalid")
+            pass
         # check whether it's valid:
     context={'form':form}
     
     return render(request, 'myResidenceService/newServiceRequest.html',context)
-   
-def thanks(request):
-    num_instances_available = BookInstance.objects.filter(status__exact='a')
+
+@login_required
+def close(request,Complaint_no):            
+    Complaint_details.objects.filter(Complaint_no=Complaint_no).update(Service_status="CLOSED")
     return render(request, 'myResidenceService/thanks.html')
 
+@login_required
+def reopen(request,Complaint_no):        
+    reopen_value=Complaint_details.objects.filter(Complaint_no=Complaint_no).values('Reopend')         
+    Complaint_details.objects.filter(Complaint_no=Complaint_no).update(Reopend=int(reopen_value[0]['Reopend'])+1,Service_status="REOPENED")
+    return render(request, 'myResidenceService/thanks.html')    
+
+@login_required
+def report(request):          
+    latest_complaint_list = Complaint_details.objects.filter( ~Q(Service_status = "CLOSED"))    
+    table = SimpleTable(latest_complaint_list)
+    return render(request, "myResidenceService/report.html", {
+        "table": table
+    })         
+    #return render(request, 'myResidenceService/report.html',context)    
+
+@login_required
 def myrequest(request):
     userdetail={}
     try:
         userdetail=getCurrentUserDetails(request.user.username)
-        print(userdetail)
+        #print(userdetail)
     except Exception as e:
         print(e)    
     latest_complaint_list={}
@@ -137,8 +151,7 @@ def myrequest(request):
     return render(request, 'myResidenceService/index.html', context)
 
 def detail(request, Complaint_no):
-    complaint_details = get_object_or_404(Complaint_details, pk=Complaint_no)
-    print(complaint_details)
+    complaint_details = get_object_or_404(Complaint_details, Complaint_no=Complaint_no)    
     context= {'service': complaint_details}
     return render(request, 'myResidenceService/detail.html',context)
 
@@ -150,10 +163,9 @@ def update(request,Complaint_no):
     if request.method=='POST':
         form=UpdateComplaintForm(request.POST or None,instance=serviceDetail)
         if form.is_valid():
-            form.save()
-            print("Saving")
+            form.save()            
             return HttpResponseRedirect('/')
         else:
-            print("Invalid")    
+            pass   
     context={ 'form':form}
     return render(request,'myResidenceService/updateService.html',context)

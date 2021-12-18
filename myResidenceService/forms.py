@@ -17,6 +17,7 @@ class ComplaintForm(ModelForm):
         super(ComplaintForm, self).__init__(*args, **kwargs)
         for field in self.disabled_fields:
             self.fields[field].disabled = True
+        self.fields['Empno'].label = "Employee Name"    
     #class Media:
     #    js = ('book_form.js', )
 
@@ -56,15 +57,13 @@ class NewUserForm(UserCreationForm):
 
     def save(self, commit=True):
         user = super(NewUserForm, self).save(commit=False)
-        user.PAN = self.cleaned_data['PAN']
-        print(user)
+        user.PAN = self.cleaned_data['PAN']        
         data = Employee.objects.filter(PAN=user.PAN ,Empno=user.username)
         secuser=Sec_incharge.objects.filter(Empno=user.username)
         if secuser.count==1:
             my_group = Group.objects.get(name='Resolver') 
             my_group.user_set.add(user)
-
-        print(data.count)
+        
         if data.count!=0:
             if commit:
                 user.save()

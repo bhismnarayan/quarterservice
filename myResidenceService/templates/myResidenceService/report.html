@@ -1,0 +1,33 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<style>
+    .container {
+        
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+</style>
+
+<div class="container row container-table">
+    <div class="col-md-10"> 
+   <h2>Report </h2>
+   </div>
+   <div class="col-md-10">
+    <h3>
+        List of pending complaints – date wise, problem wise etc.    
+       </h3>
+       {% load django_tables2 %} 
+{% render_table table %}
+   </div>
+   
+   <div class="col-md-10">
+   <h3>
+    List of solved problems – for a particular period, category wise etc.
+   </h3>
+   </div>
+
+</div>
+
+{% endblock %}

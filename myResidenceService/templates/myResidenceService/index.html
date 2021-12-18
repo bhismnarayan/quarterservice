@@ -28,7 +28,26 @@
       <td>{{ complaint.Repair_type }}</td>
       <td>{{ complaint.Complaint_detail }}</td>
       <td>{{ complaint.Service_status }}</td>
+      {% if member %}
       <td> <button type="button" class="btn btn-primary"><a href="{% url 'myResidenceService:update' complaint.Complaint_no %}">Update</a></button></td>
+      {% endif %}
+      {% if member is False %}
+
+      {% if complaint.Service_status == "COMPLETED" and complaint.Reopend != 2 %}
+      <td> <div class="row">
+        {% if  complaint.Reopend < 3 %}
+        <div class="row">
+        <button type="button" class="btn btn-info">
+        <a href="{% url 'myResidenceService:reopen' complaint.Complaint_no %}">Reopen</a></button>
+      </div>{% endif %}
+      <div class="row">
+      <button type="button" class="btn btn-success"><a class="button" 
+      href="{% url 'myResidenceService:close' complaint.Complaint_no %}">
+      close
+  </a></button></div></div>
+</td>
+      {% endif %}
+      {% endif %}
     </tr>
     {% endfor %}
   </tbody>
@@ -37,7 +56,7 @@
 {% else %}
     <p>No Request raised by you.</p>
 {% endif %}
-{% if memeber %}
+{% if member %}
             <a class="nav-item nav-link" href="/myResidenceService/report">Report</a>
             {% endif %}
 </div>
@@ -47,10 +66,8 @@
   <h3>{{userdetail.user.Name}}</h3>
   <p class="title">{{userdetail.user.Desig}}</p>
   <p>{{userdetail.qtr.Qtr_no}}</p>
-  <p>{{userdetail.colony.Col_name}}</p>
-  {% if memeber %}
-  <p><button>Station - {{userdetail.colony.Station}}</button></p>
-  {% endif %}
+  <p>{{userdetail.colony.Col_name}}</p>  
+  <p><button>Station - {{userdetail.colony.Station}}</button></p>  
 </div>
 </div>  
 </div>

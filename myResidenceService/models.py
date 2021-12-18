@@ -1,11 +1,22 @@
 from django.db import models
+from django.db.models import Max
 from django.utils.translation import gettext_lazy as _
 from django import forms
+import datetime
 
 def return_date_time():
     now = django.utils.timezone.now()
     return now
 
+def increment_booking_number():
+      last_booking = Complaint_details.objects.all().order_by('id').last()      
+      if not last_booking:
+          return 'REQ' + str(datetime.date.today().year) + str(datetime.date.today().month).zfill(2) + '0000'
+      booking_id = last_booking.Complaint_no
+      booking_int = int(booking_id[9:13])
+      new_booking_int = booking_int + 1
+      new_booking_id = 'REQ' + str(str(datetime.date.today().year)) + str(datetime.date.today().month).zfill(2) + str(new_booking_int).zfill(4)
+      return new_booking_id
 
 class Employee(models.Model):
     Empno = models.CharField(max_length=20)
@@ -64,6 +75,7 @@ class SSE_Colony(models.Model):
     Colony_code=models.CharField(max_length=20)    
     
 
+
 class Complaint_details(models.Model):
     
     class STATUS(models.TextChoices):
@@ -71,6 +83,8 @@ class Complaint_details(models.Model):
         ASSIGNED= 'ASSIGNED', _('Assigned')
         INPROGRESS = 'INPROGRESS', _('In Progress')
         COMPLETED = 'COMPLETED', _('Completed')
+        CLOSED = 'CLOSED', _('Closed')
+        REOPENED = 'REOPENED', _('Reopen')
 
     class REPAIR_TYPE(models.TextChoices):
         Select = 'Select', _('Select')
@@ -82,9 +96,10 @@ class Complaint_details(models.Model):
         DRAINS = 'DRAINS', _('Drains') 
         HORTICULTURE = 'HORTICULTURE', _('Horticulture')  
         OTHERS = 'OTHERS', _('Other')    
-    
-    Complaint_no =  models.AutoField(primary_key=True) 
-    
+    id =  models.AutoField(primary_key=True)
+    Complaint_no =  models.CharField(max_length = 20, default = increment_booking_number, editable=False)
+
+   
     Empno=models.ForeignKey(Employee,on_delete=models.CASCADE)
     Qtr=models.ForeignKey(Qtr_occupancy,on_delete=models.PROTECT, null=True)
     Repair_id=models.CharField(max_length=20,default=None, blank=True, null=True)
@@ -101,7 +116,15 @@ class Complaint_details(models.Model):
         default=STATUS.CREATED,
     )
     Service_detail=models.CharField(max_length=20,blank=True)
+    Reopend=models.IntegerField(blank=True,default=0)
     Service_date=models.DateTimeField(default=None, blank=True, null=True)    
     Currently_with=models.ForeignKey(Sec_incharge,default=None, blank=True, null=True,on_delete=models.CASCADE)
+
+import django_tables2 as tables
+
+class SimpleTable(tables.Table):
+    class Meta:
+        model = Complaint_details     
+
 
     
