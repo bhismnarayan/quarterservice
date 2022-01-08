@@ -1,7 +1,7 @@
 from django.http import HttpResponse,HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render,redirect
 from .models import Colony, Complaint_details, Employee, Qtr_occupancy, Quarter,SSE_Colony,SimpleTable
-from django.db.models import Q
+from django.db.models import Q,Count   
 from .forms import ComplaintForm,UploadFileForm,NewUserForm,UpdateComplaintForm
 from django.contrib.auth.decorators import login_required
 import pandas as pd
@@ -39,12 +39,13 @@ def index(request):
         colonycode_id_list = Colony.objects.filter(Colony_code__in=colonyList).values('id')        
         quarter = Quarter.objects.filter(Colony_code__in=colonycode_id_list).values('id')
         quarteroccupancy = Qtr_occupancy.objects.filter(Qtr_ID__in=quarter).values('id')        
-        latest_complaint_list = Complaint_details.objects.filter(Qtr_id__in=quarteroccupancy and ~Q(Service_status = "CLOSED"))        
+        latest_complaint_list = Complaint_details.objects.filter(Qtr_id__in=quarteroccupancy) #and ~Q(Service_status = "CLOSED"))
+        
     else:    
         reopen=True
-        latest_complaint_list = Complaint_details.objects.filter(Empno=userdetail['user']['id'] and ~Q(Service_status = "CLOSED") )        
+        latest_complaint_list = Complaint_details.objects.filter(Empno=userdetail['user']['id'] ).order_by('-Complaint_date')#and ~Q(Service_status = "CLOSED") )        
     context = {'latest_complaint_list': latest_complaint_list,
-              'userdetail':userdetail,'member':member,'reopen':reopen}            
+              'userdetail':userdetail,'member':member,'reopen':reopen}       
     return render(request, 'myResidenceService/index.html', context)
 
 def register_request(request):
@@ -129,11 +130,23 @@ def reopen(request,Complaint_no):
 @login_required
 def report(request):          
     latest_complaint_list = Complaint_details.objects.filter( ~Q(Service_status = "CLOSED"))    
-    table = SimpleTable(latest_complaint_list)
-    return render(request, "myResidenceService/report.html", {
-        "table": table
-    })         
-    #return render(request, 'myResidenceService/report.html',context)    
+    #table = SimpleTable(latest_complaint_list)
+    #return render(request, "myResidenceService/report.html", {
+    #    "table": table
+    #})         
+    closedComplaintList = Complaint_details.objects.all().order_by('Repair_type').filter(Service_status = "CLOSED")
+    openComplaint = (Complaint_details.objects
+    #.values('Currently_with_id','Currently_with')
+    .annotate(dcount=Count('Currently_with_id'))
+    .filter( ~Q(Service_status = "CLOSED"))    
+    .order_by()
+    )
+
+    #print(openComplaint)
+    context = {'latest_complaint_list': latest_complaint_list,
+    'closedComplaint':closedComplaintList,
+    'openComplaint':openComplaint} 
+    return render(request, 'myResidenceService/report.html',context)    
 
 @login_required
 def myrequest(request):
@@ -150,12 +163,13 @@ def myrequest(request):
               'userdetail':userdetail}
     return render(request, 'myResidenceService/index.html', context)
 
+@login_required
 def detail(request, Complaint_no):
     complaint_details = get_object_or_404(Complaint_details, Complaint_no=Complaint_no)    
     context= {'service': complaint_details}
     return render(request, 'myResidenceService/detail.html',context)
 
-
+@login_required
 def update(request,Complaint_no):
     serviceDetail=Complaint_details.objects.get(Complaint_no=Complaint_no)
     form=UpdateComplaintForm(instance=serviceDetail)
@@ -168,4 +182,4 @@ def update(request,Complaint_no):
         else:
             pass   
     context={ 'form':form}
-    return render(request,'myResidenceService/updateService.html',context)
+    return render(request,'myResidenceService/editService.html',context)
