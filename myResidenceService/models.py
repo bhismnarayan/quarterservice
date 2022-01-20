@@ -119,6 +119,8 @@ class Complaint_details(models.Model):
     Service_date=models.DateTimeField(default=None, blank=True, null=True)    
     Currently_with=models.ForeignKey(Sec_incharge,default=None, blank=True, null=True,on_delete=models.CASCADE)
 
+    
+
 import django_tables2 as tables
 
 class SimpleTable(tables.Table):

@@ -1,0 +1,126 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<style>
+    .container {
+        
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.userdetail{
+  margin-left: 70%;
+}
+ 
+
+.nav-link {
+  display:none;
+}
+</style>
+
+<div class="container row container-table">
+    <div class="col-md-10"> 
+   <h2>Report </h2>
+   </div>
+   <div class="col-md-10">
+    <h3>
+        List of pending complaints – date wise, problem wise etc.    
+       </h3>
+       {% if latest_complaint_list %}
+<table class="table">
+  <thead>
+    <tr>      
+      <th scope="col">Complaint No</th>
+      <th scope="col">Repair Type</th>
+      <th scope="col">Compalint Details</th>
+      <th scope="col">Status</th>
+      <th scope="col">Assiged To</th>
+      <th scope="col">Created Date</th>
+    </tr>
+  </thead>
+  <tbody>
+    
+    {% for complaint in latest_complaint_list %}
+    <tr>
+      <td>{{ complaint.Complaint_no }}</td>
+     
+      <td>{{ complaint.Repair_type }}</td>
+      <td>{{ complaint.Complaint_detail }}</td>
+      <td>{{ complaint.Service_status }}</td>
+      <td>{{ complaint.Currently_with }}</td>
+      <td>{{ complaint.Complaint_date }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>    
+{% else %}
+    <p>No Request raised </p>
+{% endif %}
+   </div>
+   <!--
+   <div class="col-md-10">
+   <h3>
+    List of solved problems – for a particular period, category wise etc.
+   </h3>
+   {% if closedComplaint %}
+<table class="table">
+  <thead>
+    <tr>      
+      <th scope="col">Complaint No</th>
+      <th scope="col">Repair Type</th>
+      <th scope="col">Compalint Details</th>
+      <th scope="col">Status</th>
+      <th scope="col">Assiged To</th>
+      <th scope="col">Created Date</th>
+    </tr>
+  </thead>
+  <tbody>
+    
+    {% for complaint in closedComplaint %}
+    <tr>
+      <td>{{ complaint.Complaint_no }}</td>
+     
+      <td>{{ complaint.Repair_type }}</td>
+      <td>{{ complaint.Complaint_detail }}</td>
+      <td>{{ complaint.Service_status }}</td>
+      <td>{{ complaint.Currently_with }}</td>
+      <td>{{ complaint.Complaint_date }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>    
+{% else %}
+    <p>No Request raised </p>
+{% endif %}
+   </div> -->
+   <div class="col-md-10">
+    <h3>
+     List of open complaint by supervisor
+    </h3>
+    {% if openComplaint %}
+ <table class="table">
+   <thead>
+     <tr>      
+       <th scope="col">Supervisor Name</th>
+       <th scope="col">Complaints in Progress</th>
+       
+     </tr>
+   </thead>
+   <tbody>
+     
+     {% for complaint in openComplaint %}
+     <tr>
+       <td>{{ complaint.Currently_with }}</td>      
+       <td>{{ complaint.dcount }}</td>
+       
+     </tr>
+     {% endfor %}
+   </tbody>
+ </table>    
+ {% else %}
+     <p>No Request raised </p>
+ {% endif %}
+    </div>
+</div>
+
+{% endblock %}

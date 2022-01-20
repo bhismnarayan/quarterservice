@@ -1,6 +1,6 @@
 from django.http import HttpResponse,HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render,redirect
-from .models import Colony, Complaint_details, Employee, Qtr_occupancy, Quarter,SSE_Colony,SimpleTable
+from .models import Colony, Complaint_details, Employee, Qtr_occupancy, Quarter,SSE_Colony,SimpleTable,Sec_incharge
 from django.db.models import Q,Count   
 from .forms import ComplaintForm,UploadFileForm,NewUserForm,UpdateComplaintForm
 from django.contrib.auth.decorators import login_required
@@ -10,8 +10,13 @@ from django.contrib.auth import login
 from django.contrib import messages
 
 
-def is_member(user):
-    return user.groups.filter(name='Resolver').exists()
+def memberGroup(user):
+    if user.groups.filter(name='Resolver').exists():
+        return 'Resolver'
+    elif user.groups.filter(name='Officer').exists():
+        return 'Officer'
+    else:
+        return ''    
 
 def getCurrentUserDetails(username):
     userdetail={}
@@ -33,14 +38,19 @@ def index(request):
     latest_complaint_list={}
     member=False
     reopen=False
-    if is_member(request.user):
+    if memberGroup(request.user)=='Resolver':
         member=True            
         colonyList=SSE_Colony.objects.filter(Empno=userdetail['user']['Empno']).values('Colony_code')        
         colonycode_id_list = Colony.objects.filter(Colony_code__in=colonyList).values('id')        
         quarter = Quarter.objects.filter(Colony_code__in=colonycode_id_list).values('id')
         quarteroccupancy = Qtr_occupancy.objects.filter(Qtr_ID__in=quarter).values('id')        
         latest_complaint_list = Complaint_details.objects.filter(Qtr_id__in=quarteroccupancy) #and ~Q(Service_status = "CLOSED"))
-        
+
+    elif memberGroup(request.user)=='Officer':
+        print("Officer")
+        latest_complaint_list={}
+        response=officerReport(request)
+        return HttpResponse(response)
     else:    
         reopen=True
         latest_complaint_list = Complaint_details.objects.filter(Empno=userdetail['user']['id'] ).order_by('-Complaint_date')#and ~Q(Service_status = "CLOSED") )        
@@ -128,13 +138,16 @@ def reopen(request,Complaint_no):
     return render(request, 'myResidenceService/thanks.html')    
 
 @login_required
-def report(request):          
-    latest_complaint_list = Complaint_details.objects.filter( ~Q(Service_status = "CLOSED"))    
+def report(request):  
+    userdetail=getCurrentUserDetails(request.user.username)
+    currentUser=Sec_incharge.objects.filter(Empno=userdetail['user']['Empno']).values('id')        
+    print(currentUser[0]['id'])
+    latest_complaint_list = Complaint_details.objects.filter( ~Q(Service_status = "CLOSED")).filter(Currently_with=currentUser[0]['id'])
     #table = SimpleTable(latest_complaint_list)
     #return render(request, "myResidenceService/report.html", {
     #    "table": table
     #})         
-    closedComplaintList = Complaint_details.objects.all().order_by('Repair_type').filter(Service_status = "CLOSED")
+    closedComplaintList = Complaint_details.objects.all().order_by('Repair_type').filter(Service_status = "CLOSED").filter(Currently_with=currentUser[0]['id'])
     openComplaint = (Complaint_details.objects
     #.values('Currently_with_id','Currently_with')
     .annotate(dcount=Count('Currently_with_id'))
@@ -147,6 +160,25 @@ def report(request):
     'closedComplaint':closedComplaintList,
     'openComplaint':openComplaint} 
     return render(request, 'myResidenceService/report.html',context)    
+
+@login_required
+def officerReport(request):  
+    latest_complaint_list = Complaint_details.objects.filter( ~Q(Service_status = "CLOSED"))    
+    closedComplaintList = Complaint_details.objects.all().order_by('Repair_type').filter(Service_status = "CLOSED")
+    openComplaint = (Complaint_details.objects
+    #.values('Currently_with')
+    #.values('Currently_with_id','Currently_with')
+    
+    .filter( ~Q(Service_status = "CLOSED"))    
+    .annotate(dcount=Count('Currently_with_id'))
+    .order_by('Currently_with')
+    )
+ 
+    print(openComplaint)
+    context = {'latest_complaint_list': latest_complaint_list,
+    'closedComplaint':closedComplaintList,
+    'openComplaint':openComplaint} 
+    return render(request, 'myResidenceService/officerreport.html',context)    
 
 @login_required
 def myrequest(request):

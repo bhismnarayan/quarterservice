@@ -22,7 +22,8 @@
 <form action="" method="POST" class="form-horizontal">
     {% csrf_token %}
     {{form|crispy}}    
-    <input type="submit" class="btn btn-primary">    
+    <input type="submit" class="btn btn-primary">
+    <input class="btn btn-primary" type="reset" value="Reset"> 
 </form>
 </div>
 </div>

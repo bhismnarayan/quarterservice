@@ -8,7 +8,7 @@
   
 <div class="col-sm-9">
   {% if latest_complaint_list %}
-<table class="table">
+<table class="table table-bordered">
   <thead>
     <tr>      
       <th scope="col">Complaint No</th>
@@ -16,6 +16,7 @@
       <th scope="col">Compalint Details</th>
       <th scope="col">Status</th>
       <th scope="col"></th>
+      
     </tr>
   </thead>
   <tbody>
@@ -36,14 +37,14 @@
       {% if complaint.Service_status == "COMPLETED" and complaint.Reopend != 2 %}
       <td> <div class="row">
         {% if  complaint.Reopend < 3 %}
-        <div class="row">
+        <div class="col-md-6">
         <button type="button" class="btn btn-info">
         <a href="{% url 'myResidenceService:reopen' complaint.Complaint_no %}">Reopen</a></button>
       </div>{% endif %}
-      <div class="row">
+      <div class="col-md-6">
       <button type="button" class="btn btn-success"><a class="button" 
       href="{% url 'myResidenceService:close' complaint.Complaint_no %}">
-      close
+      Close
   </a></button></div></div>
 </td>
       {% endif %}
