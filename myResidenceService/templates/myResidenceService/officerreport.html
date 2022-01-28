@@ -24,6 +24,34 @@
    </div>
    <div class="col-md-10">
     <h3>
+     List of open complaint by supervisor
+    </h3>
+    {% if openComplaint %}
+ <table class="table">
+   <thead>
+     <tr>      
+       <th scope="col">Supervisor Name</th>
+       <th scope="col">Complaints in Progress</th>
+       
+     </tr>
+   </thead>
+   <tbody>
+     
+     {% for complaint in openComplaint %}
+     <tr>
+       <td>{{ complaint.Currently_with }}</td>      
+       <td>{{ complaint.dcount }}</td>
+       
+     </tr>
+     {% endfor %}
+   </tbody>
+ </table>    
+ {% else %}
+     <p>No Request raised </p>
+ {% endif %}
+    </div>
+   <div class="col-md-10">
+    <h3>
         List of pending complaints – date wise, problem wise etc.    
        </h3>
        {% if latest_complaint_list %}
@@ -93,34 +121,7 @@
     <p>No Request raised </p>
 {% endif %}
    </div> -->
-   <div class="col-md-10">
-    <h3>
-     List of open complaint by supervisor
-    </h3>
-    {% if openComplaint %}
- <table class="table">
-   <thead>
-     <tr>      
-       <th scope="col">Supervisor Name</th>
-       <th scope="col">Complaints in Progress</th>
-       
-     </tr>
-   </thead>
-   <tbody>
-     
-     {% for complaint in openComplaint %}
-     <tr>
-       <td>{{ complaint.Currently_with }}</td>      
-       <td>{{ complaint.dcount }}</td>
-       
-     </tr>
-     {% endfor %}
-   </tbody>
- </table>    
- {% else %}
-     <p>No Request raised </p>
- {% endif %}
-    </div>
+   
 </div>
 
 {% endblock %}

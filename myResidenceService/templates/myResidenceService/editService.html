@@ -5,7 +5,12 @@
 {% load static %}
 <script src="{% static 'myResidenceService/js/editservice.js' %}">
 </script>
-
+<script type="text/javascript">
+    $(document).ready(function() {
+$("#id_Service_status option[value='CLOSED']").attr("disabled","disabled");
+$("#id_Service_status option[value='REOPENED']").attr("disabled","disabled");
+});
+</script>
 <link rel="stylesheet" href="{% static 'myResidenceService/newservicerequest.css' %}">
 {% load crispy_forms_tags %}
 <div class="row">
