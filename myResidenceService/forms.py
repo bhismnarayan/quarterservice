@@ -1,23 +1,36 @@
+from cmath import log
 from django.forms import ModelForm
-
 from django.forms.models import fields_for_model
-from .models import Complaint_details,Employee,Sec_incharge
+from .models import Complaint_details,Employee,RepairSubType,Repair
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User,Group
 from django import forms
+import logging
+logger = logging.getLogger(__name__)
 
 class ComplaintForm(ModelForm):
     disabled_fields = ('Qtr','Empno')    
 
     class Meta:
         model= Complaint_details
-        fields=['Empno','Qtr','Repair_type','Complaint_detail']
+        fields=['Empno','Qtr','Repair_type','Repair_sub_type','Complaint_detail','Currently_with']
     
     def __init__(self, *args, **kwargs):
         super(ComplaintForm, self).__init__(*args, **kwargs)
         for field in self.disabled_fields:
             self.fields[field].disabled = True
-        self.fields['Empno'].label = "Employee Name"    
+        self.fields['Empno'].label = "Employee Name"
+        self.fields['Repair_sub_type'].queryset = RepairSubType.objects.none() 
+        logger.error(self.data.get('Repair_type'))
+        if 'Repair_type' in self.data:
+            logger.error("if!!")    
+            try:
+                id = int(self.data.get('Repair_type'))                
+                self.fields['Repair_sub_type'].queryset = RepairSubType.objects.filter(repair_id=id).order_by('name')
+            except Exception as e:
+                logger.error(e)  # invalid input from the client; ignore and fallback to empty City queryset
+        elif self.instance.pk:            
+            self.fields['Repair_sub_type'].queryset = self.instance.Repair.RepairSubType_set.order_by('name')
     #class Media:
     #    js = ('book_form.js', )
 
@@ -59,10 +72,7 @@ class NewUserForm(UserCreationForm):
         user = super(NewUserForm, self).save(commit=False)
         user.PAN = self.cleaned_data['PAN']        
         data = Employee.objects.filter(PAN=user.PAN ,Empno=user.username)
-        secuser=Sec_incharge.objects.filter(Empno=user.username)
-        if secuser.count==1:
-            my_group = Group.objects.get(name='Resolver') 
-            my_group.user_set.add(user)
+        
         
         if data.count!=0:
             if commit:

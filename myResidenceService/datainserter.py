@@ -1,33 +1,36 @@
 import pandas as pd
-from .models import SSE_Colony,Sec_incharge,Employee,Colony,Quarter,Qtr_occupancy
-
+from .models import SSE_Colony,Employee,Colony,Quarter,Qtr_occupancy
+from django.contrib.auth.models import User
+import logging
+logger = logging.getLogger(__name__)
 class UploadtoTable:
     def SSETableInserter(df):
+        try:            
+            for ind in df.index:
+                try:
+                    user = User.objects.create_user(username=df['GroupName'][ind],                                 
+                                 password='Mango12$')
+                except Exception as e:
+                    logger.error("Error creating user",user)
+        except Exception as e:
+            logger.error(e)    
+        
         SSE_Colony_data = [
              SSE_Colony(
-                Colony_code = df.iloc[i, 0], 
-                Empno = Sec_incharge.objects.get(Empno= df.iloc[i, 2]),                      
+                Colony_code = df.iloc[i, 2], 
+                Department=df.iloc[i, 3],
+                groupName=User.objects.get(username= df.iloc[i, 0]),                      
+                active=df.iloc[i, 4], 
+                Empno= df.iloc[i, 1],#Employee.objects.get(Empno= df.iloc[i, 2]),                      
                 )           
                   for i in range(len(df))]
         SSE_Colony.objects.all().delete()
         SSE_Colony.objects.bulk_create(SSE_Colony_data)
 
-    def SecInchargeInserter(df):
-        sec_df=df.drop_duplicates(subset=['EMPNO']).copy()
-        Sec_incharge_data=[
-        Sec_incharge(            
-                Empno = sec_df.iloc[i, 2] ,  
-                Name=sec_df.iloc[i, 3] ,
-                Desig=sec_df.iloc[i, 4] ,            
-                )           
-                  for i in range(len(sec_df))
-                ]
-        Sec_incharge.objects.all().delete() 
-        Sec_incharge.objects.bulk_create(Sec_incharge_data)  
-            
+    
     def EmployeeInserter(df):
         df=df.drop_duplicates(subset=['EMPNO']).copy()
-        print("Employee Data insertion")
+        logger.error("Employee Data insertion")
         Employee_data = [
             Employee(
                 Name = df.iloc[i, 4], 
@@ -84,37 +87,40 @@ class UploadtoTable:
     def fileHandler(csv_file,filename):
         df=pd.read_csv(csv_file,sep=',')
         if filename=='sse':
+            # try:
+            #   pass  
+            #   #UploadtoTable.SecInchargeInserter(df)
+              
+            # except Exception as e:
+            #   logger.error("Sec Incharge Inserter Failed ",e)    
+                 
             try:
-              UploadtoTable.SecInchargeInserter(df)
-            except Exception as e:
-              print("Sec Incharge Inserter Failed ",e)    
-
-            try:
+                
                 UploadtoTable.SSETableInserter(df)                
             except Exception as e:
-                print("SSE inserter failed ",e)  
+                logger.error("SSE inserter failed ",e)  
 
             
         else:
             try:
               UploadtoTable.EmployeeInserter(df)  
             except Exception as e:
-                print("Employee Inserter Failed ",e)
+                logger.error("Employee Inserter Failed ",e)
             
             try:
                 UploadtoTable.ColonyInserter(df)
             except Exception as e:
-                print("Colony Inserter Failed ",e)
+                logger.error("Colony Inserter Failed ",e)
             
             try:
                  UploadtoTable.QuarterInserter(df)
             except Exception as e:
-                print("Quarter Inserter Failed ",e)
+                logger.error("Quarter Inserter Failed ",e)
 
             try:
                  UploadtoTable.QuarterOccupancyInserter(df)
             except Exception as e:
-                print("Quarter occupancy Inserter Failed ",e)    
+                logger.error("Quarter occupancy Inserter Failed ",e)    
                 
             
             

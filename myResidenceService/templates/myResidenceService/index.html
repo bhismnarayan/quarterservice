@@ -61,6 +61,7 @@
             <a class="nav-item nav-link" href="/myResidenceService/report">Report</a>
             {% endif %}
 </div>
+{% if userdetail %}
 <div class="col-sm-3">
 <div class="card">  
   
@@ -70,7 +71,8 @@
   <p>{{userdetail.colony.Col_name}}</p>  
   <p><button>Station - {{userdetail.colony.Station}}</button></p>  
 </div>
-</div>  
+</div>
+{% endif %}  
 </div>
       
 {% endblock %}

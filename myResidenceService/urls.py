@@ -14,4 +14,5 @@ urlpatterns = [
     path('<str:Complaint_no>/close/', views.close, name='close'), 
     path('<str:Complaint_no>/reopen/', views.reopen, name='reopen'),    
     path('<str:Complaint_no>/update/', views.update, name='update'),
+    path(r'ajax/load-repairSubtype', views.load_repairSubType, name='load_repairSubType'), 
 ]

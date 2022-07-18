@@ -1,6 +1,6 @@
 from django.http import HttpResponse,HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render,redirect
-from .models import Colony, Complaint_details, Employee, Qtr_occupancy, Quarter,SSE_Colony,SimpleTable,Sec_incharge
+from .models import Colony, Complaint_details, Employee, Qtr_occupancy, Quarter,SSE_Colony,Repair,RepairSubType
 from django.db.models import Q,Count   
 from .forms import ComplaintForm,UploadFileForm,NewUserForm,UpdateComplaintForm
 from django.contrib.auth.decorators import login_required
@@ -8,6 +8,9 @@ import pandas as pd
 from .datainserter import UploadtoTable
 from django.contrib.auth import login
 from django.contrib import messages
+from django.contrib.auth.models import User
+import logging
+logger = logging.getLogger(__name__)
 
 
 def memberGroup(user):
@@ -20,40 +23,45 @@ def memberGroup(user):
 
 def getCurrentUserDetails(username):
     userdetail={}
-    userdetail['user']=Employee.objects.filter(Empno= username).values()[0]
-    qtr_id=Qtr_occupancy.objects.filter(Empno__Empno= username).values()[0]
-    userdetail['qtr_occ']=qtr_id
-    userdetail['qtr']=Quarter.objects.filter(id=qtr_id['Qtr_ID_id']).values()[0]    
-    userdetail['colony']=Colony.objects.filter(id=userdetail['qtr']['Colony_code_id']).values()[0]
+    try: 
+        userdetail['user']=Employee.objects.filter(Empno= username).values()[0]
+        qtr_id=Qtr_occupancy.objects.filter(Empno__Empno= username).values()[0]
+        userdetail['qtr_occ']=qtr_id
+        userdetail['qtr']=Quarter.objects.filter(id=qtr_id['Qtr_ID_id']).values()[0]    
+        userdetail['colony']=Colony.objects.filter(id=userdetail['qtr']['Colony_code_id']).values()[0]
+    except Exception as e:
+        logger.error("Error getting detail for ",username,"Error-",e)
+        
     return userdetail
 
 @login_required
 def index(request):
-    userdetail={}
-    try:
-        userdetail=getCurrentUserDetails(request.user.username)
-        
-    except Exception as e:
-        print(e)    
+    
     latest_complaint_list={}
     member=False
     reopen=False
     if memberGroup(request.user)=='Resolver':
         member=True            
-        colonyList=SSE_Colony.objects.filter(Empno=userdetail['user']['Empno']).values('Colony_code')        
-        colonycode_id_list = Colony.objects.filter(Colony_code__in=colonyList).values('id')        
-        quarter = Quarter.objects.filter(Colony_code__in=colonycode_id_list).values('id')
-        quarteroccupancy = Qtr_occupancy.objects.filter(Qtr_ID__in=quarter).values('id')        
-        latest_complaint_list = Complaint_details.objects.filter(Qtr_id__in=quarteroccupancy) #and ~Q(Service_status = "CLOSED"))
+        colonyList=SSE_Colony.objects.filter(groupName=request.user.id).values('id')
+              
+        latest_complaint_list = Complaint_details.objects.filter( ~Q(Service_status = "CLOSED")).filter(Currently_with_id=colonyList[0]['id']) #and ~Q(Service_status = "CLOSED"))
+        logger.error(latest_complaint_list)
+        context = {'latest_complaint_list': latest_complaint_list,'member':member,'reopen':False}       
+        return render(request, 'myResidenceService/resolver.html', context)
 
-    elif memberGroup(request.user)=='Officer':
-        print("Officer")
+    elif memberGroup(request.user)=='Officer':        
         latest_complaint_list={}
         response=officerReport(request)
         return HttpResponse(response)
-    else:    
+    else:  
+        userdetail={}
+        try:
+            userdetail=getCurrentUserDetails(request.user.username)
+        
+        except Exception as e:
+            logger.error(e)     
         reopen=True
-        latest_complaint_list = Complaint_details.objects.filter(Empno=userdetail['user']['id'] ).order_by('-Complaint_date')#and ~Q(Service_status = "CLOSED") )        
+        latest_complaint_list = Complaint_details.objects.filter( ~Q(Service_status = "CLOSED")).filter(Empno=userdetail['user']['id'] ).order_by('-Complaint_date')#and ~Q(Service_status = "CLOSED") )        
     context = {'latest_complaint_list': latest_complaint_list,
               'userdetail':userdetail,'member':member,'reopen':reopen}       
     return render(request, 'myResidenceService/index.html', context)
@@ -82,12 +90,12 @@ def upload_file(request):
             UploadtoTable.fileHandler(csv_file,'sse')
             pass
         except Exception as e:
-            print(e)
+            logger.error(e)
         try:
             csv_file = request.FILES['occupant_file']
             UploadtoTable.fileHandler(csv_file,'occupant_file')
         except Exception as e:
-            print(e)    
+            logger.error(e)    
         return render(request, 'myResidenceService/index.html')
     else:
         form = UploadFileForm()
@@ -102,22 +110,35 @@ def services(request):
    context = {'latest_complaint_list': latest_complaint_list}
    return render(request, 'myResidenceService/index.html', context)
 
+
+#Create new request
 @login_required
 def newRequest(request):
     userdetails=getCurrentUserDetails(request.user.username)  
    
     form=ComplaintForm()
     form.fields['Empno'].initial = userdetails['user']['id']    
-    form.fields['Qtr'].initial = userdetails['qtr_occ']['id']
-    
+    form.fields['Qtr'].initial = userdetails['qtr_occ']['id']    
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
         
         form = ComplaintForm(request.POST)
         form.fields['Empno'].initial = userdetails['user']['id']    
         form.fields['Qtr'].initial = userdetails['qtr_occ']['id']
-        if form.is_valid():
-            form.save()           
+        
+        result = SSE_Colony.objects.filter(Colony_code__contains=userdetails['colony']['Colony_code']).filter(Department=Repair.objects.filter(id=int(request.POST.get('Repair_type'))).values('name')[0]['name']).values('id')
+        logger.error(result)
+        #groupName=userdetails['colony']['Colony_code']+Repair.objects.filter(id=int(request.POST.get('Repair_type'))).values('name')[0]['name']
+        #userid = User.objects.filter(username=groupName).values('id')
+        assignee=result[0]['id']
+        #userid[0]['id']).values('id')
+        form.fields['Currently_with'].initial = assignee
+
+        if form.is_valid():         
+            obj = form.save(commit=False)
+            obj.Currently_with_id= assignee
+            obj.save()
+            #form.save()           
             return HttpResponseRedirect('/')
         else:
             pass
@@ -138,24 +159,19 @@ def reopen(request,Complaint_no):
     return render(request, 'myResidenceService/thanks.html')    
 
 @login_required
-def report(request):  
-    userdetail=getCurrentUserDetails(request.user.username)
-    currentUser=Sec_incharge.objects.filter(Empno=userdetail['user']['Empno']).values('id')        
-    print(currentUser[0]['id'])
-    latest_complaint_list = Complaint_details.objects.filter( ~Q(Service_status = "CLOSED")).filter(Currently_with=currentUser[0]['id'])
-    #table = SimpleTable(latest_complaint_list)
-    #return render(request, "myResidenceService/report.html", {
-    #    "table": table
-    #})         
-    closedComplaintList = Complaint_details.objects.all().order_by('Repair_type').filter(Service_status = "CLOSED").filter(Currently_with=currentUser[0]['id'])
-    openComplaint = (Complaint_details.objects
-    #.values('Currently_with_id','Currently_with')
-    .annotate(dcount=Count('Currently_with_id'))
-    .filter( ~Q(Service_status = "CLOSED"))    
-    .order_by()
-    )
-
-    #print(openComplaint)
+def report(request): 
+    colonyList=SSE_Colony.objects.filter(groupName=request.user.id).values('id')        
+    latest_complaint_list = Complaint_details.objects.filter( ~Q(Service_status = "CLOSED")).filter(Currently_with_id=colonyList[0]['id']) #and ~Q(Service_status = "CLOSED")) 
+             
+    closedComplaintList = Complaint_details.objects.all().order_by('Repair_type').filter(Service_status = "CLOSED").filter(Currently_with=colonyList[0]['id'])
+    openComplaint = {}
+    # (Complaint_details.objects
+    # .values('Currently_with','Currently_with')    
+    # .filter( ~Q(Service_status = "CLOSED")) 
+    # .filter(Currently_with_id=colonyList[0]['id'])   
+    # .order_by('Currently_with_id')
+    # .annotate(dcount=Count('Currently_with_id'))    
+    # )   
     context = {'latest_complaint_list': latest_complaint_list,
     'closedComplaint':closedComplaintList,
     'openComplaint':openComplaint} 
@@ -174,7 +190,6 @@ def officerReport(request):
     .order_by('Currently_with')
     )
  
-    print(openComplaint)
     context = {'latest_complaint_list': latest_complaint_list,
     'closedComplaint':closedComplaintList,
     'openComplaint':openComplaint} 
@@ -184,10 +199,9 @@ def officerReport(request):
 def myrequest(request):
     userdetail={}
     try:
-        userdetail=getCurrentUserDetails(request.user.username)
-        #print(userdetail)
+        userdetail=getCurrentUserDetails(request.user.username)        
     except Exception as e:
-        print(e)    
+        logger.error(e)    
     latest_complaint_list={}
     latest_complaint_list = Complaint_details.objects.filter(Empno=userdetail['user']['id'])
     
@@ -215,3 +229,12 @@ def update(request,Complaint_no):
             pass   
     context={ 'form':form}
     return render(request,'myResidenceService/editService.html',context)
+
+def load_repairSubType(request):
+    
+    repair_id = request.GET['Repair']
+    
+    #logger.info("Repair",repair_id)
+    repairSubTypes = RepairSubType.objects.filter(repair_id=repair_id).order_by('name')
+    logger.error(repairSubTypes)
+    return render(request, 'myResidenceService/repairSubtype_dropdown_list_options.html', {'repairSubTypes': repairSubTypes})
