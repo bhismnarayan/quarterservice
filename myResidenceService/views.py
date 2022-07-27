@@ -61,7 +61,10 @@ def index(request):
         except Exception as e:
             logger.error(e)     
         reopen=True
-        latest_complaint_list = Complaint_details.objects.filter( ~Q(Service_status = "CLOSED")).filter(Empno=userdetail['user']['id'] ).order_by('-Complaint_date')#and ~Q(Service_status = "CLOSED") )        
+        try:
+            latest_complaint_list = Complaint_details.objects.filter( ~Q(Service_status = "CLOSED")).filter(Empno=userdetail['user']['id'] ).order_by('-Complaint_date')#and ~Q(Service_status = "CLOSED") )        
+        except Exception as e:
+            logger.error(e)    
     context = {'latest_complaint_list': latest_complaint_list,
               'userdetail':userdetail,'member':member,'reopen':reopen}       
     return render(request, 'myResidenceService/index.html', context)
