@@ -34,3 +34,12 @@ pip install psycopg2-binary pandas
 	
 - create admin account
 - - python manage.py createsuperuser
+
+
+##Flow
+- update the database table with occupant data and sse data
+- 
+###
+- Register with the username as EMPID and PANcard and create password
+- create a request to for compaints
+ 
