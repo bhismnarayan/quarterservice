@@ -133,13 +133,18 @@ def newRequest(request):
         logger.error(result)
         #groupName=userdetails['colony']['Colony_code']+Repair.objects.filter(id=int(request.POST.get('Repair_type'))).values('name')[0]['name']
         #userid = User.objects.filter(username=groupName).values('id')
-        assignee=result[0]['id']
-        #userid[0]['id']).values('id')
-        form.fields['Currently_with'].initial = assignee
+        try:
+            assignee=result[0]['id']        
+            form.fields['Currently_with'].initial = assignee
+        except Exception as e:
+            logger.error(e,result)    
 
         if form.is_valid():         
             obj = form.save(commit=False)
-            obj.Currently_with_id= assignee
+            try:
+                obj.Currently_with_id= assignee
+            except Exception as e:
+                logger.error(e)    
             obj.save()
             #form.save()           
             return HttpResponseRedirect('/')
