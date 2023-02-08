@@ -22,13 +22,17 @@ pip install psycopg2-binary pandas
 -psycopg2
 - Create group Resolver,Officer 
 - create data for repair and repairsubtype
-- INSERT INTO public."myResidenceService_repair"(	id, name)	VALUES (1, 'Civil Engg.');
+- INSERT INTO public."myResidenceService_repair"(	id, name)	VALUES (1, 'Civil');
 - INSERT INTO public."myResidenceService_repair"(	id, name)	VALUES (2, 'Electrical');
-- INSERT INTO public."myResidenceService_repair"(	id, name)	VALUES (3, 'Telephone');
-- INSERT INTO public."myResidenceService_repair"(	id, name)	VALUES (4, 'Internet');
-- INSERT INTO public."myResidenceService_repairsubtype"(id, name, repair_id)
-	VALUES (1, 'Roof Leakeage', 1);
+- INSERT INTO public."myResidenceService_repair"(	id, name)	VALUES (3, 'Telnet');
 
+INSERT INTO public."myResidenceService_repairsubtype"(id, name, repair_id)
+	VALUES (1, 'Roof Leakeage', 1);
+INSERT INTO public."myResidenceService_repairsubtype"(id, name, repair_id)
+	VALUES (2, 'Electrical issue', 2);
+INSERT INTO public."myResidenceService_repairsubtype"(id, name, repair_id)
+	VALUES (3, 'Telnet', 3);
+		
 
 ###Separate department for telephone and internet
 	
@@ -37,9 +41,14 @@ pip install psycopg2-binary pandas
 
 
 ##Flow
+- create group with
 - update the database table with occupant data and sse data
 - 
 ###
 - Register with the username as EMPID and PANcard and create password
 - create a request to for compaints
- 
+
+Resolver-
+ 500001_07_Civil
+ 500001_07_Electrical
+ 500001_54_TelNet

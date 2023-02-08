@@ -23,4 +23,4 @@ RUN pip3 install -r requirements.txt
 # port where the Django app runs  
 EXPOSE 8080  
 # start server  
-CMD python manage.py runserver  
+CMD python3 manage.py runserver  

@@ -1,15 +1,39 @@
 import pandas as pd
 from .models import SSE_Colony,Employee,Colony,Quarter,Qtr_occupancy
 from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
+from .models import Colony, Complaint_details
 import logging
 logger = logging.getLogger(__name__)
 class UploadtoTable:
     def SSETableInserter(df):
+        try:
+            new_group, created = Group.objects.get_or_create(name='Resolver')
+            # Code to add permission to group ???
+            ct = ContentType.objects.get_for_model(Complaint_details)
+
+            # Now what - Say I want to add 'Can add project' permission to new_group?
+            permission = Permission.objects.create(codename='can_change_Complaint_details',
+                                   name='Can add project',
+                                   content_type=ct)
+            new_group.permissions.add(permission) 
+        except Exception as e:
+            pass    
+           
+
         try:            
             for ind in df.index:
                 try:
                     user = User.objects.create_user(username=df['GroupName'][ind],                                 
                                  password='Mango12$')
+                    my_group = Group.objects.get(name='Resolver')
+                    try:
+                        my_group.user_set.add(user)
+                    except Exception as e:
+                        logger.error("Group addition failed",e)
+
+                                 
                 except Exception as e:
                     logger.error("Error creating user",user)
         except Exception as e:
