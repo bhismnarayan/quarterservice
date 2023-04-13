@@ -9,7 +9,10 @@ from .datainserter import UploadtoTable
 from django.contrib.auth import login
 from django.contrib import messages
 from django.contrib.auth.models import User
+import datetime
+from django.utils import timezone as tz
 import logging
+import csv
 logger = logging.getLogger(__name__)
 
 
@@ -203,6 +206,74 @@ def officerReport(request):
     'openComplaint':openComplaint} 
     return render(request, 'myResidenceService/officerreport.html',context)    
 
+@login_required
+def adminReport(request):  
+    d10 = tz.now() - datetime.timedelta(days=10)
+    d20 = tz.now() - datetime.timedelta(days=20)
+    d30 = tz.now() - datetime.timedelta(days=30)
+    #dish = Restaurant.objects.filter(timestamp__lt=d)
+    
+    openComplaint10 = (Complaint_details.objects
+    .filter( ~Q(Service_status = "CLOSED")).filter(Complaint_date__gte=d10)    
+    .annotate(dcount=Count('Currently_with_id'))
+    .order_by('Currently_with')
+    )
+    openComplaint20 = (Complaint_details.objects
+    .filter( ~Q(Service_status = "CLOSED")).filter(Complaint_date__gte=d10).filter(Complaint_date__lte=d20)    
+    .annotate(dcount=Count('Currently_with_id'))
+    .order_by('Currently_with')
+    )
+    openComplaint30 = (Complaint_details.objects
+    .filter( ~Q(Service_status = "CLOSED")).filter(Complaint_date__gte=d30)    
+    .annotate(dcount=Count('Currently_with_id'))
+    .order_by('Currently_with')
+    )
+    print(openComplaint30)
+    print(openComplaint10)
+    context = {
+    'openComplaint10':openComplaint10,
+    'openComplaint20':openComplaint20,
+    'openComplaint30':openComplaint30} 
+    return render(request, 'myResidenceService/adminReport.html',context)    
+
+@login_required
+def quarterReport(request):  
+    
+    quarter=Quarter.objects.all() 
+    if request.GET.get('item_id'):
+        selected_quarter = request.GET.get('item_id')
+        query_results = Complaint_details.objects.all().filter(Qtr_id = selected_quarter)
+    else:
+        query_results = Complaint_details.objects.all()
+
+
+    context = {
+        'query_results': query_results,
+        'quarter': quarter,
+    }
+    context = {'query_results':query_results,'quarter':quarter} 
+    return render(request, 'myResidenceService/quarterReport.html',context)    
+
+
+
+def export_users_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="users.csv"'
+    query_results=''
+    if request.GET.get('item_id'):
+        selected_quarter = request.GET.get('item_id')
+        query_results = Complaint_details.objects.all().filter(Qtr_id = selected_quarter).values_list('Complaint_no')
+    else:
+        query_results = Complaint_details.objects.all().values_list('Complaint_no')
+    writer = csv.writer(response)
+    writer.writerow(['Complaint'])
+
+    #users = Complaint_details.objects.all().values_list('Complaint_no')
+    if len(query_results)>0:
+       for user in query_results:
+            writer.writerow(user)
+
+    return response
 @login_required
 def myrequest(request):
     userdetail={}

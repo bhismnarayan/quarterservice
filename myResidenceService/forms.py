@@ -13,7 +13,7 @@ class ComplaintForm(ModelForm):
 
     class Meta:
         model= Complaint_details
-        fields=['Empno','Qtr','Repair_type','Repair_sub_type','Complaint_detail','Currently_with']
+        fields=['Empno','Qtr','Priority','Repair_type','Repair_sub_type','Complaint_detail','Currently_with']
     
     def __init__(self, *args, **kwargs):
         super(ComplaintForm, self).__init__(*args, **kwargs)
@@ -31,12 +31,7 @@ class ComplaintForm(ModelForm):
                 logger.error(e)  # invalid input from the client; ignore and fallback to empty City queryset
         elif self.instance.pk:            
             self.fields['Repair_sub_type'].queryset = self.instance.Repair.RepairSubType_set.order_by('name')
-    #class Media:
-    #    js = ('book_form.js', )
-
-    #def clean(self):
-    #    if self.cleaned_data['Repair_type'] is None:
-    #        raise ValidationError('You should indicate the sequel if the book has one.')    
+      
 
 class UpdateComplaintForm(ModelForm):   
     disabled_fields = ('Qtr','Empno','Complaint_detail')
@@ -49,14 +44,7 @@ class UpdateComplaintForm(ModelForm):
         super(UpdateComplaintForm, self).__init__(*args, **kwargs)
         for field in self.disabled_fields:
             self.fields[field].disabled = True
-    #class Media:
-    #    js = ('book_form.js', )
-
-    #def clean(self):
-    #    if self.cleaned_data['Repair_type'] is None:
-    #        raise ValidationError('You should indicate the sequel if the book has one.')    
-
-
+    
 class UploadFileForm(forms.Form):
     title = forms.CharField(max_length=50)
     file  = forms.FileField()  
