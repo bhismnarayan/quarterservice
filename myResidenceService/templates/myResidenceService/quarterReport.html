@@ -1,0 +1,49 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<style>
+    .container {
+        
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.userdetail{
+  margin-left: 70%;
+}
+ 
+
+.nav-link {
+  display:none;
+}
+</style>
+
+
+<div class="container">
+  <p></p>
+  <form method="get" action="{% url 'myResidenceService:quarterReport' %}">
+      
+      <select name="item_id">
+        {% for entry in quarter %}
+            <option value="{{ entry.id }}">{{ entry.Qtr_ID }}</option>
+        {% endfor %}
+        </select>
+      <input type="submit" >
+  </form>
+</div>
+<div>
+  <h3>All Compalints by quarter</h3>
+  </div>
+  <table class=" table">
+
+      {% for item in query_results %}
+      <tr>
+          <td>{{ item.Complaint_no }}</td>
+          
+      </tr>
+      {% endfor %}
+  </table>
+</div>
+</div>
+<a href="{% url 'myResidenceService:export_users_csv' %}">Export data</a>
+{% endblock %}

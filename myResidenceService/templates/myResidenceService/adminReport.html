@@ -1,0 +1,75 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<style>
+    .container {
+        
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.userdetail{
+  margin-left: 70%;
+}
+ 
+
+.nav-link {
+  display:none;
+}
+</style>
+
+<div class="container row container-table">
+    <div class="col-md-10"> 
+   <h2>Report </h2>
+   </div>
+   <div class="col-md-10">
+    <h3>
+     List of open complaint 
+    </h3>
+    {% if openComplaint10 %}
+ <table class="table">
+   <thead>
+     <tr>      
+       <th scope="col">Complaint Pending Under</th>
+       <th scope="col">Upto 10 days</th>
+       <th scope="col">10-30 days</th>
+       <th scope="col">More than 30 days</th>       
+     </tr>
+   </thead>
+   <tbody>
+     
+     {% for complaint in openComplaint10 %}
+     <tr>
+       <td>{{ complaint.Currently_with }}</td>      
+       <td>{{ complaint.dcount }}</td>
+       <td></td>
+       <td></td>
+     </tr>
+     {% endfor %}
+     {% for complaint20 in openComplaint20 %}
+     <tr>
+       <td>{{ complaint20.Currently_with }}</td>      
+       <td></td>
+       <td>{{ complaint20.dcount }}</td>
+       <td></td>
+     </tr>
+     {% endfor %}
+     {% for complaint30 in openComplaint30 %}
+     <tr>
+       <td>{{ complaint30.Currently_with }}</td>      
+       <td></td>
+       <td></td>
+       <td>{{ complaint30.dcount }}</td>
+     </tr>
+     {% endfor %}
+   </tbody>
+ </table>    
+ {% else %}
+     <p>No Request raised </p>
+ {% endif %}
+    
+   </div>
+   
+</div>
+
+{% endblock %}

@@ -114,7 +114,12 @@ class Complaint_details(models.Model):
         COMPLETED = 'COMPLETED', _('Completed')
         CLOSED = 'CLOSED', _('Closed')
         REOPENED = 'REOPENED', _('Reopen')
-
+    
+    class PRIORITY(models.TextChoices):
+        MOSTURGENT = 'MOSTURGENT', _('Most Urgent')
+        INTERMEDIATE= 'INTERMEDIATE', _('Intemediate')
+        PLANNED = 'PLANNED', _('Planned')
+        
     Complaint_no =  models.CharField(max_length = 20, default = increment_booking_number, editable=False)
     Empno=models.ForeignKey(Employee,on_delete=models.CASCADE)
     Qtr=models.ForeignKey(Qtr_occupancy,on_delete=models.PROTECT, null=True)
@@ -124,15 +129,16 @@ class Complaint_details(models.Model):
     
     Complaint_date=models.DateTimeField(auto_now_add=True)
     Complaint_detail=models.CharField(max_length=200)
-    #Repair_type=models.CharField(
-    #    max_length=15,
-    #    choices=REPAIR_TYPE.choices, 
-    #    default=REPAIR_TYPE.Select,      
-    #)
     Service_status=models.CharField(
         max_length=10,
         choices=STATUS.choices,
         default=STATUS.CREATED,
+    )
+    Priority=models.CharField(
+        max_length=15,
+        choices=PRIORITY.choices,
+        default=PRIORITY.PLANNED,
+
     )
     Service_detail=models.CharField(max_length=20,blank=True)
     Reopend=models.IntegerField(blank=True,default=0)

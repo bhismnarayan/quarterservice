@@ -17,6 +17,7 @@
   <thead>
     <tr>      
       <th scope="col">Complaint No</th>
+      <th scope="col">Priority</th>
       <th scope="col">Repair Type</th>
       <th scope="col">Compalint Details</th>
       <th scope="col">Status</th>
@@ -32,6 +33,7 @@
       
      
       <td>{{ complaint.Repair_type }}</td>
+      <td>{{ complaint.Priority }}</td>
       <td>{{ complaint.Complaint_detail }}</td>
       <td>{{ complaint.Service_status }}</td>
       {% if member %}
