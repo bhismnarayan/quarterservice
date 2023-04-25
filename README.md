@@ -20,6 +20,8 @@ Install python  by following below link -
 
 https://www.python.org/ftp/python/3.11.3/python-3.11.3-amd64.exe
 
+make sure you check the add to path 
+
 https://pip.pypa.io/en/stable/installation/
 
 ### Getting source code on machine :- create directory where you want to keep you the source code 
@@ -29,15 +31,17 @@ git clone https://github.com/bhismnarayan/quarterservice.git
 
 ###  Then navaigate to and use to pip to install packages using requirements.txt
 
-'''
+```
 cd  quarterservice
-pip install psycopg2-binary pandas django psycopg2
-'''
+pip install psycopg2-binary pandas django psycopg2 django-crispy-forms crispy-bootstrap4
+
+```
 
 ### Running the application
-'''
+```
+python manage.py migrate
 python manage.py runserver 0.0.0.0:80 &
-'''
+```
 
 # quarterservice
 
