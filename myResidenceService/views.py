@@ -88,7 +88,7 @@ def register_request(request):
         
     return render (request=request, template_name="myResidenceService/register.html", context={"register_form":form})
 
-def upload_file(request):
+def uploaddata(request):
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         csv_file = request.FILES['sse_file'] #returns a dict-like object        
